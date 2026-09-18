@@ -28,3 +28,20 @@ jobs:
           printf 'event=%s actor=%s triggering_actor=%s sha=%s\n' \
             "$GITHUB_EVENT_NAME" "$GITHUB_ACTOR" "$GITHUB_TRIGGERING_ACTOR" "$GITHUB_SHA"
           printf 'baseline=true\n' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Attempt inert marker
+        if: github.event_name == 'schedule'
+        shell: bash
+        env:
+          CANARY: ${{ secrets.BB_SCHEDULE_CANARY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          expected='b7d35a465f322880527b9c89caa3879b3804d1ded37ac07da26442ba492f0096'
+          actual=$(printf '%s' "$CANARY" | sha256sum | awk '{print $1}')
+          test "$actual" = "$expected"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+            -f ref='refs/tags/schedule-actor-hit-20260917-7002' \
+            -f sha="$GITHUB_SHA"
+          printf 'marker_created=true actor=%s triggering_actor=%s sha=%s\n' \
+            "$GITHUB_ACTOR" "$GITHUB_TRIGGERING_ACTOR" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

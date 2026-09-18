@@ -36,6 +36,7 @@ jobs:
           CANARY: ${{ secrets.BB_SCHEDULE_CANARY }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          # B-authored differential; cron intentionally unchanged.
           set -euo pipefail
           expected='b7d35a465f322880527b9c89caa3879b3804d1ded37ac07da26442ba492f0096'
           actual=$(printf '%s' "$CANARY" | sha256sum | awk '{print $1}')

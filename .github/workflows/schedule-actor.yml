@@ -1,0 +1,30 @@
+name: Schedule Actor Policy Fixture
+
+on:
+  push:
+  schedule:
+    - cron: '*/5 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: schedule-actor-policy-fixture
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Record inert baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_EVENT_NAME" in
+            push|schedule) ;;
+            *) exit 11 ;;
+          esac
+          printf 'event=%s actor=%s triggering_actor=%s sha=%s\n' \
+            "$GITHUB_EVENT_NAME" "$GITHUB_ACTOR" "$GITHUB_TRIGGERING_ACTOR" "$GITHUB_SHA"
+          printf 'baseline=true\n' >> "$GITHUB_STEP_SUMMARY"
